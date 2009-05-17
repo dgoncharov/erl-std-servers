@@ -1,0 +1,6 @@
+1. is it necessary to close sockets? How to find out the number of opened %sockets?
+2. how to make sure socket gets closed even if an exception gets thrown?
+3. how to switch off logging?
+4. how to shut down on ^d?
+5. is it really necessary to setops on a socket returned by accept()? What about {active, once}?
+
