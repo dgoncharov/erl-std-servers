@@ -7,10 +7,14 @@
 
 -module(echo).
 -export([start/1]).
--export([main/1]).
+-export([main/1, main/0]).
 
 main([Port]) ->
     {ok, Listen} = start(list_to_integer(atom_to_list(Port))),
+    block_till_stdin_closed(false, Listen).
+
+main() ->
+    {ok, Listen} = start(echo),
     block_till_stdin_closed(false, Listen).
 
 block_till_stdin_closed(false, Listen) ->
@@ -21,7 +25,7 @@ block_till_stdin_closed(true, Listen) ->
     init:stop().
 
 start(Port) ->
-    io:format("~p starting to listen on port ~B~n", [self(), Port]),
+    io:format("~p starting to listen on port ~p~n", [self(), Port]),
     {ok, Listen} = gen_tcp:listen(Port, [binary, {packet, 0}, {reuseaddr, true}, {active, once}]),
     io:format("~p successfully started to listen on ~p~n", [self(), Listen]),
     spawn(fun() -> accept(Listen) end),
