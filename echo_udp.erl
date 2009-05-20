@@ -7,10 +7,14 @@
 
 -module(echo_udp).
 -export([start/1]).
--export([main/1]).
+-export([main/1, main/0]).
 
 main([Port]) ->
     spawn(fun() -> start(list_to_integer(atom_to_list(Port))) end),
+    block_till_stdin_closed(false).
+
+main() ->
+    spawn(fun() -> start(echo) end),
     block_till_stdin_closed(false).
 
 block_till_stdin_closed(false) ->
@@ -20,7 +24,7 @@ block_till_stdin_closed(true) ->
     init:stop().
 
 start(Port) ->
-    io:format("~p opening udp port ~B~n", [self(), Port]),
+    io:format("~p opening udp port ~p~n", [self(), Port]),
     {ok, Sock} = gen_udp:open(Port, [binary, {active, once}]),
     io:format("~p successfully opened udp port ~p: ~p~n", [self(), Port, Sock]),
     serve_sock(Sock).
