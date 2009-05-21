@@ -3,13 +3,13 @@
 -export([gen_charseq/1]).
 
 exec_when_stdin_closed(Fun) ->
-    exec_when_stdin_closed(Fun, false).
+    exec_when_stdin_closed(Fun, io:get_line('')).
 
-exec_when_stdin_closed(Fun, false) ->
-    exec_when_stdin_closed(Fun, io:get_line('') =:= "q\n");
+exec_when_stdin_closed(Fun, eof) ->
+    Fun();
 
-exec_when_stdin_closed(Fun, true) ->
-    Fun().
+exec_when_stdin_closed(Fun, _) ->
+    exec_when_stdin_closed(Fun).
 
 gen_charseq(N) ->
     Maxchars = 95, % There are 95 ascii chars which can be printed.
