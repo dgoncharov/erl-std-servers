@@ -11,18 +11,11 @@
 
 main([Port]) ->
     {ok, Listen} = start(list_to_integer(atom_to_list(Port))),
-    block_till_stdin_closed(false, Listen).
+    common:exec_when_stdin_closed(fun() -> gen_tcp:close(Listen), init:stop() end).
 
 main() ->
     {ok, Listen} = start(chargen),
-    block_till_stdin_closed(false, Listen).
-
-block_till_stdin_closed(false, Listen) ->
-    block_till_stdin_closed(io:get_line('') =:= "q\n", Listen);
-
-block_till_stdin_closed(true, Listen) ->
-    gen_tcp:close(Listen),
-    init:stop().
+    common:exec_when_stdin_closed(fun() -> gen_tcp:close(Listen), init:stop() end).
 
 start(Port) ->
     io:format("~p starting to listen on port ~p~n", [self(), Port]),
@@ -48,7 +41,7 @@ serve_conn(Sock, N) ->
     receive
     {tcp, Sock, _} ->
         io:format("~p received from ~p~n", [self(), Sock]),
-	P = gen_seq(N),
+	P = common:gen_charseq(N),
         io:format("~p sending ~p bytes ~p to ~p~n", [self(), length(P), P, Sock]),
         ok = gen_tcp:send(Sock, P),
 	inet:setopts(Sock, [{active, once}]),
@@ -59,22 +52,4 @@ serve_conn(Sock, N) ->
     Unexpected ->
         io:format("~p received unexpected message ~p~n", [self(), Unexpected])
     end.
-
-gen_seq(N) ->
-    Maxchars = 95, % There are 95 ascii chars which can be printed.
-    Linelen = 72, % The number of chars on a line.
-    Chars = lists:seq($\s, $\s + Maxchars - 1),
-    Low = N rem Maxchars,
-    Up = (N + Linelen - 1) rem Maxchars,
-%    io:format("~p - ~p~n", [Low, Up]),
-    L = case Up > Low of
-    true ->
-        lists:sublist(Chars, Low + 1, Up - Low + 1);
-    false ->
-        L1 = lists:sublist(Chars, Low, Maxchars),
-	L2 = lists:sublist(Chars, 1, Up),
-%	io:format("L1: ~p, L2: ~p~n", [L1, L2]),
-        L1 ++ L2
-    end,
-    L ++ [$\r, $\n].
 
